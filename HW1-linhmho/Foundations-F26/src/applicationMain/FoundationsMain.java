@@ -82,10 +82,12 @@ public class FoundationsMain extends Application {
 	@Override
 	public void start(Stage theStage) {
 		
+		
 		// Connect to the in-memory database
 		try {
 			// Connect to the database
 			database.connectToDatabase();
+
 		} catch (SQLException e) {
 			// If the connection request fails, it usually means some other app is using it
 			databaseInUse.setTitle("*** ERROR ***");
@@ -95,18 +97,37 @@ public class FoundationsMain extends Application {
 			System.exit(0);
 		}
 		
+
+		
 		// If the database is empty, no users have been established, so this user must be an admin
 		// user doing initial system startup activities and we need to set that admin's username
 		// and password using a special start you page.
-		if (database.isDatabaseEmpty()) {
-			// This is a first use, so have the user set up the admin account
-			guiFirstAdmin.ViewFirstAdmin.displayFirstAdmin(theStage);	
-		}
-		else
-			// This is not a first use, so set up for the user to log in or create a new account
-			guiUserLogin.ViewUserLogin.displayUserLogin(theStage);
 		
-		// With the JavaFX pages set up, this thread of the execution comes to an end.
+		boolean empty = database.isDatabaseEmpty();
+		
+		System.out.println(">>> DATABASE EMPTY = " + empty);
+
+//		if (database.isDatabaseEmpty()) {
+//			
+//			// This is a first use, so have the user set up the admin account
+//	        
+//			guiFirstAdmin.ViewFirstAdmin.displayFirstAdmin(theStage);	
+//		}
+//		else
+//	        System.out.println("4 - opening Login UI");
+//			// This is not a first use, so set up for the user to log in or create a new account
+//			guiUserLogin.ViewUserLogin.displayUserLogin(theStage);
+//		
+//		// With the JavaFX pages set up, this thread of the execution comes to an end.
+		
+		if (empty) {
+		    System.out.println(">>> OPENING FIRST ADMIN PAGE <<<");
+		    guiFirstAdmin.ViewFirstAdmin.displayFirstAdmin(theStage);
+		}
+		else {
+		    System.out.println(">>> OPENING LOGIN PAGE <<<");
+		    guiUserLogin.ViewUserLogin.displayUserLogin(theStage);
+		}
 	}
 
 	/*******

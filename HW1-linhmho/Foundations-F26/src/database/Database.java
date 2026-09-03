@@ -87,8 +87,11 @@ public class Database {
 			Class.forName(JDBC_DRIVER); // Load the JDBC driver
 			connection = DriverManager.getConnection(DB_URL, USER, PASS);
 			statement = connection.createStatement(); 
+			
+			System.out.println(">>> USING THIS DATABASE.JAVA <<<");
+
 			// You can use this command to clear the database and restart from fresh.
-			//statement.execute("DROP ALL OBJECTS");
+			statement.execute("DROP ALL OBJECTS");
 
 			createTables();  // Create the necessary tables if they don't exist
 		} catch (ClassNotFoundException e) {
@@ -137,16 +140,23 @@ public class Database {
  * 
  */
 	public boolean isDatabaseEmpty() {
-		String query = "SELECT COUNT(*) AS count FROM userDB";
-		try {
-			ResultSet resultSet = statement.executeQuery(query);
-			if (resultSet.next()) {
-				return resultSet.getInt("count") == 0;
-			}
-		}  catch (SQLException e) {
+	    String query = "SELECT COUNT(*) AS count FROM userDB";
+
+	    try {
+	        ResultSet resultSet = statement.executeQuery(query);
+
+	        if (resultSet.next()) {
+	            int count = resultSet.getInt("count");
+	            System.out.println(">>> USER COUNT = " + count);
+	            return count == 0;
+	        }
+
+	    } catch (SQLException e) {
+	        e.printStackTrace();
 	        return false;
 	    }
-		return true;
+
+	    return true;
 	}
 	
 	
