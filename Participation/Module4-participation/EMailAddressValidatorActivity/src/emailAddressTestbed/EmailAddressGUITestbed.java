@@ -39,7 +39,7 @@ public class EmailAddressGUITestbed extends Application {
 	@Override
 	public void start(Stage theStage) throws Exception {
 		
-		theStage.setTitle("Venus Ho");					// Label the stage (a window)
+		theStage.setTitle("Lynn Robert Carter");					// Label the stage (a window)
 		
 		Pane theRoot = new Pane();							// Create a pane within the window
 		
