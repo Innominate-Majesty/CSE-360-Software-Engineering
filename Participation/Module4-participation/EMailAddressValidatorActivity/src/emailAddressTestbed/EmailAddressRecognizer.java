@@ -151,7 +151,37 @@ public class EmailAddressRecognizer {
 			case 1: 
 				// State 1 has three valid transitions.  
 
-				// Replace this with the required code
+				// check whether the character can continue the local part
+				if ((currentChar >= 'A' && currentChar <= 'Z') || (currentChar >= 'a' && currentChar <= 'z') || (currentChar >= '0' && currentChar <= '9')) {
+
+					// remain in state 1 while reading the local part characters
+					nextState = 1;
+				}
+
+				// check whether a new local part section should begin
+				else if (currentChar == '.') {
+
+					// return to state 0 so another local character is required
+					nextState = 0;
+				}
+
+				// check whether the domain portion should begin
+				else if (currentChar == '@') {
+
+					// move to state 2 so the first domain character is required
+					nextState = 2;
+
+					// reset the counter before processing the first domain section
+					domainPartCounter = 0;
+				}
+
+				// handle any character that is not valid in state 1
+				else {
+
+					// stop the FSM at the invalid character
+					running = false;
+				}
+				
 				
 				break;
 				// The execution of this state is finished
@@ -159,7 +189,22 @@ public class EmailAddressRecognizer {
 			case 2: 
 				// State 2 has one valid transition.
 				
-				// Replace this with the required code
+				// check whether the character can begin a domain section
+				if ((currentChar >= 'A' && currentChar <= 'Z') || (currentChar >= 'a' && currentChar <= 'z') || (currentChar >= '0' && currentChar <= '9')) {
+
+					// count the first character in this domain section
+					domainPartCounter++;
+
+					// move to state 3 to continue processing the domain
+					nextState = 3;
+				} 
+
+				// handle a character that cannot begin a domain section
+				else {
+
+					// stop the FSM at the invalid character
+					running = false;
+				}
 
 				// The execution of this state is finished
 				break;
@@ -167,7 +212,64 @@ public class EmailAddressRecognizer {
 			case 3:
 				// State 3 has three valid transition.
 				
-				// Replace this with the required code
+				// check whether another alphanumeric domain character was given
+				if ((currentChar >= 'A' && currentChar <= 'Z') || (currentChar >= 'a' && currentChar <= 'z') || (currentChar >= '0' && currentChar <= '9')) {
+
+					// check whether adding this character would stay within the 63 char limit
+					if (domainPartCounter <63) {
+
+						// count the new domain character
+						domainPartCounter++;
+
+						// remain in state 3 while processing the domain section
+						nextState = 3;
+					}
+
+					// handle the domain section if it's longer than 63 char
+					else {
+
+						// stop the FSM at the character that exceeds the limit
+						running = false;
+					}
+				}
+
+				// check whether a new domain section should begin
+				else if (currentChar == '.') {
+
+					// move to state 2 so another domain character is required
+					nextState = 2;
+
+					// reset the counter for the new domain section
+					domainPartCounter = 0;
+				}
+
+				// check whether a hyphen appears inside the domain section
+				else if (currentChar == '-') {
+
+					// check whether the hyphen fits within the 63 char limit
+					if (domainPartCounter < 63) {
+
+						// count the hyphen as part of the domain section
+						domainPartCounter++;
+
+						// move to state 4 so a domain character is required after the hyphen
+						nextState = 4;
+					}
+					
+					// handle a hyphen that would exceed the limit
+					else {
+
+						// stop the FSM at the character that exceeds
+						running = false;
+					}
+				}
+
+				// handle any character that is invalid in the domain section
+				else {
+
+					// stop the FSM at the invalid character
+					running = false;
+				}
 
 				// The execution of this state is finished
 				break;
@@ -175,7 +277,33 @@ public class EmailAddressRecognizer {
 			case 4: 
 				// State 4 has one valid transition.
 
-				// Replace this with the required code
+				// check whether an alphanumeric character follows the hyphen
+				if ((currentChar >= 'A' && currentChar <= 'Z') || (currentChar >= 'a' && currentChar <= 'z') || (currentChar >= '0' && currentChar <= '9')) {
+
+					// check whether the character fits within the 63 char limit
+					if (domainPartCounter < 63) {
+
+						// count the domain character after the hyphen
+						domainPartCounter++;
+
+						// return to state 3 to continue processing the domain
+						nextState = 3;
+					}
+
+					// handle a domain section that is longer than 63 char
+					else {
+
+						// stop the FSM
+						running = false;
+					}
+				}
+
+				// handle a missing or invalid character after the hyphen
+				else {
+
+					// stop the FSM 
+					running = false;
+				}
 
 				// The execution of this state is finished
 				break;
@@ -218,12 +346,49 @@ public class EmailAddressRecognizer {
 		case 1:
 			// State 1 is not a final state, so we can return a very specific error message
 
-			// Replace this with the required code
+			// record where the FSM stopped
+			emailAddressIndexofError = currentCharNdx;
+
+			// check whether the input ended before an @ and domain were provided
+			if (currentCharNdx >= input.length()) {
+
+				// return error message indicating that the domain portion is required and is missing
+				emailAddressErrorMessage = "The local part must be followed by an @ and a domain name.\n";
+			}
+
+			// handle an invalid character inside the local part
+			else {
+
+				// return error message stating the acceptable characters
+				emailAddressErrorMessage = "The local part may contain only alphanumeric characters, periods, or @.\n";
+			}
+
+			// return the message and point to the error position
+			return emailAddressErrorMessage + displayInput(input, currentCharNdx);
+
 
 		case 2:
 			// State 2 is not a final state, so we can return a very specific error message
 						
-			// Replace this with the required code
+			// record where the FSM stopped
+			emailAddressIndexofError = currentCharNdx;
+
+			// check whether the input ended before a domain character was provided
+			if (currentCharNdx >= input.length()) {
+
+				// return error message indicating that a domain character is missing
+				emailAddressErrorMessage = "A domain character is required here.\n";
+			}
+
+			// handle an invalid character at the beginning of a domain section
+			else {
+
+				// return error message indicating what type of character must begin the domain section
+				emailAddressErrorMessage = "A domain section must begin with an alphanumeric character.\n";
+			}
+
+			// return the message and the position of the error
+			return emailAddressErrorMessage + displayInput(input, currentCharNdx);
 
 		case 3:
 			// State 3 is a Final State, so this is not an error if the input is empty, otherwise
@@ -247,7 +412,32 @@ public class EmailAddressRecognizer {
 		case 4:
 			// State 4 is not a final state, so we can return a very specific error message. 
 
-			// Replace this with the required code
+			// record where the FSM stopped
+			emailAddressIndexofError = currentCharNdx;
+
+			// check whether the input ended immediately after a hyphen
+			if (currentCharNdx >= input.length()) {
+
+				// return error message indicating that another domain character is required
+				emailAddressErrorMessage = "A hyphen must be followed by an alphanumeric domain character.\n";
+			}
+
+			// check whether an alphanumeric character would exceed the 63 char limit
+			else if (((currentChar >= 'A' && currentChar <= 'Z') || (currentChar >= 'a' && currentChar <= 'z') || (currentChar >= '0' && currentChar <= '9')) && domainPartCounter >= 63) {
+
+				// return error message indicating the maximum size allowed 
+				emailAddressErrorMessage = "A domain section may not exceed 63 characters.\n";
+			}
+
+			// handle any other invalid character after a hyphen
+			else {
+
+				// return error message indicating what must follow the hyphen
+				emailAddressErrorMessage = "A hyphen must be followed by an alphanumeric domain character.\n";
+			}
+
+			// return the error message and position where the error is
+			return emailAddressErrorMessage + displayInput(input, currentCharNdx);
 
 		default:
 			return "";
